@@ -71,9 +71,9 @@ pub async fn handle_callback(db: &PgPool, code: &str, state: &str) -> anyhow::Re
         .map(|t| token::encrypt(t.secret()))
         .transpose()?;
 
-    let expires_at = token.expires_in().map(|d| {
-        time::OffsetDateTime::now_utc() + time::Duration::seconds(d.as_secs() as i64)
-    });
+    let expires_at = token
+        .expires_in()
+        .map(|d| time::OffsetDateTime::now_utc() + time::Duration::seconds(d.as_secs() as i64));
 
     sqlx::query!(
         "UPDATE integrations

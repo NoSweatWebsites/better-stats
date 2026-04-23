@@ -1,8 +1,8 @@
+use aes_gcm::aead::rand_core::RngCore;
 use aes_gcm::{
     aead::{Aead, KeyInit, OsRng},
     Aes256Gcm, Key, Nonce,
 };
-use aes_gcm::aead::rand_core::RngCore;
 use base64::{engine::general_purpose::STANDARD, Engine};
 
 fn cipher() -> anyhow::Result<Aes256Gcm> {

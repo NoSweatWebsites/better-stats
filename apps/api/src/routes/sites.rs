@@ -15,7 +15,10 @@ use crate::{error::AppError, state::AppState};
 pub fn router() -> Router<AppState> {
     Router::new()
         .route("/", get(list_sites).post(create_site))
-        .route("/:site_id", get(get_site).put(update_site).delete(delete_site))
+        .route(
+            "/:site_id",
+            get(get_site).put(update_site).delete(delete_site),
+        )
 }
 
 async fn list_sites(

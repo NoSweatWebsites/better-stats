@@ -16,8 +16,7 @@ async fn main() {
     let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     let clickhouse_url =
         std::env::var("CLICKHOUSE_URL").unwrap_or_else(|_| "http://localhost:8123".into());
-    let clickhouse_db =
-        std::env::var("CLICKHOUSE_DB").unwrap_or_else(|_| "betterstats".into());
+    let clickhouse_db = std::env::var("CLICKHOUSE_DB").unwrap_or_else(|_| "betterstats".into());
 
     let db = PgPoolOptions::new()
         .max_connections(10)

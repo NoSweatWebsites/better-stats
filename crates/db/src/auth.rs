@@ -80,8 +80,8 @@ async fn get_jwks() -> anyhow::Result<JwkSet> {
         }
     }
 
-    let url = std::env::var("CLERK_JWKS_URL")
-        .map_err(|_| anyhow::anyhow!("CLERK_JWKS_URL not set"))?;
+    let url =
+        std::env::var("CLERK_JWKS_URL").map_err(|_| anyhow::anyhow!("CLERK_JWKS_URL not set"))?;
 
     let jwks: JwkSet = reqwest::get(&url).await?.json().await?;
 
@@ -104,9 +104,7 @@ async fn validate_clerk_jwt(token: &str) -> anyhow::Result<ClerkClaims> {
         .ok_or_else(|| anyhow::anyhow!("no JWK matching kid={kid}"))?;
 
     let decoding_key = match &jwk.algorithm {
-        AlgorithmParameters::RSA(rsa) => {
-            DecodingKey::from_rsa_components(&rsa.n, &rsa.e)?
-        }
+        AlgorithmParameters::RSA(rsa) => DecodingKey::from_rsa_components(&rsa.n, &rsa.e)?,
         _ => anyhow::bail!("unsupported JWK algorithm"),
     };
 
