@@ -2,8 +2,11 @@ FROM rust:1.76-slim AS builder
 WORKDIR /app
 COPY Cargo.toml Cargo.lock ./
 COPY crates/ ./crates/
-COPY apps/api/ ./apps/api/
 COPY services/worker/ ./services/worker/
+# Stub api so Cargo workspace resolves without needing its source
+RUN mkdir -p apps/api/src \
+    && printf '[package]\nname = "api"\nversion = "0.1.0"\nedition = "2021"\n\n[dependencies]\ntokio = { workspace = true }\naxum = { workspace = true }\n' > apps/api/Cargo.toml \
+    && echo 'fn main() {}' > apps/api/src/main.rs
 RUN cargo build --release -p worker
 
 FROM gcr.io/distroless/cc-debian12
