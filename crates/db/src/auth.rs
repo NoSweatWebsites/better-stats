@@ -1,5 +1,12 @@
 use axum::{extract::Request, http::StatusCode, middleware::Next, response::IntoResponse};
+use jsonwebtoken::{
+    decode, decode_header,
+    jwk::{AlgorithmParameters, JwkSet},
+    Algorithm, DecodingKey, Validation,
+};
 use serde::Deserialize;
+use std::sync::OnceLock;
+use tokio::sync::RwLock;
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct ClerkClaims {
@@ -39,6 +46,75 @@ impl AuthContext {
     pub fn require_org_id(&self) -> Result<&str, StatusCode> {
         self.org_id().ok_or(StatusCode::FORBIDDEN)
     }
+
+    pub fn is_super_admin(&self) -> bool {
+        matches!(self, Self::SuperAdmin { .. })
+    }
+}
+
+struct JwksCache {
+    jwks: Option<JwkSet>,
+    fetched_at: Option<std::time::Instant>,
+}
+
+static JWKS_CACHE: OnceLock<RwLock<JwksCache>> = OnceLock::new();
+
+fn jwks_cache() -> &'static RwLock<JwksCache> {
+    JWKS_CACHE.get_or_init(|| {
+        RwLock::new(JwksCache {
+            jwks: None,
+            fetched_at: None,
+        })
+    })
+}
+
+async fn get_jwks() -> anyhow::Result<JwkSet> {
+    const TTL: std::time::Duration = std::time::Duration::from_secs(3600);
+
+    {
+        let cache = jwks_cache().read().await;
+        if let (Some(jwks), Some(fetched_at)) = (&cache.jwks, cache.fetched_at) {
+            if fetched_at.elapsed() < TTL {
+                return Ok(jwks.clone());
+            }
+        }
+    }
+
+    let url = std::env::var("CLERK_JWKS_URL")
+        .map_err(|_| anyhow::anyhow!("CLERK_JWKS_URL not set"))?;
+
+    let jwks: JwkSet = reqwest::get(&url).await?.json().await?;
+
+    let mut cache = jwks_cache().write().await;
+    cache.jwks = Some(jwks.clone());
+    cache.fetched_at = Some(std::time::Instant::now());
+
+    Ok(jwks)
+}
+
+async fn validate_clerk_jwt(token: &str) -> anyhow::Result<ClerkClaims> {
+    let header = decode_header(token)?;
+    let kid = header
+        .kid
+        .ok_or_else(|| anyhow::anyhow!("JWT missing kid header"))?;
+
+    let jwks = get_jwks().await?;
+    let jwk = jwks
+        .find(&kid)
+        .ok_or_else(|| anyhow::anyhow!("no JWK matching kid={kid}"))?;
+
+    let decoding_key = match &jwk.algorithm {
+        AlgorithmParameters::RSA(rsa) => {
+            DecodingKey::from_rsa_components(&rsa.n, &rsa.e)?
+        }
+        _ => anyhow::bail!("unsupported JWK algorithm"),
+    };
+
+    let mut validation = Validation::new(Algorithm::RS256);
+    validation.validate_aud = false;
+
+    let token_data = decode::<ClerkClaims>(token, &decoding_key, &validation)?;
+    Ok(token_data.claims)
 }
 
 pub async fn clerk_auth_middleware(
@@ -83,9 +159,4 @@ pub async fn clerk_auth_middleware(
 
     req.extensions_mut().insert(ctx);
     Ok(next.run(req).await)
-}
-
-async fn validate_clerk_jwt(_token: &str) -> anyhow::Result<ClerkClaims> {
-    // Phase 1: fetch JWKS from Clerk, validate RS256 JWT, cache JwkSet in Arc<RwLock<>>
-    todo!("implement JWT validation against Clerk JWKS endpoint")
 }

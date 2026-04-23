@@ -4,11 +4,13 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-tokio       = { workspace = true }
-anyhow      = { workspace = true }
-tracing     = { workspace = true }
-tracing-subscriber = { workspace = true }
-dotenvy     = { workspace = true }
-db          = { path = "../../crates/db" }
-ingest      = { path = "../../crates/ingest" }
-analytics   = { path = "../../crates/analytics" }
+tokio                = { workspace = true }
+anyhow               = { workspace = true }
+tracing              = { workspace = true }
+tracing-subscriber   = { workspace = true }
+dotenvy              = { workspace = true }
+sqlx                 = { workspace = true }
+tokio-cron-scheduler = { workspace = true }
+db                   = { path = "../../crates/db" }
+ingest               = { path = "../../crates/ingest" }
+analytics            = { path = "../../crates/analytics" }
