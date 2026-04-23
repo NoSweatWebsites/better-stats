@@ -357,8 +357,10 @@ dependencies = [
  "serde",
  "static_assertions",
  "thiserror 1.0.69",
+ "time",
  "tokio",
  "url",
+ "uuid",
 ]
 
 [[package]]
@@ -1284,6 +1286,7 @@ dependencies = [
  "aes-gcm",
  "anyhow",
  "base64 0.22.1",
+ "clickhouse",
  "db",
  "oauth2",
  "reqwest",
@@ -1294,6 +1297,7 @@ dependencies = [
  "time",
  "tokio",
  "tracing",
+ "urlencoding",
  "uuid",
 ]
 
@@ -3679,6 +3683,7 @@ version = "0.1.0"
 dependencies = [
  "analytics",
  "anyhow",
+ "clickhouse",
  "db",
  "dotenvy",
  "ingest",

@@ -1,0 +1,64 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT i.id, i.provider, i.access_token, i.refresh_token, i.expires_at,\n                s.id as site_id, s.ga4_property_id, s.gsc_site_url\n         FROM integrations i\n         JOIN sites s ON s.id = i.site_id\n         WHERE i.org_id = $1 AND i.refresh_token IS NOT NULL",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "provider",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "access_token",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "refresh_token",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "expires_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 5,
+        "name": "site_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 6,
+        "name": "ga4_property_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "gsc_site_url",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      true,
+      true,
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "0ffddf5125d540f9ae90ede23f57a24e7e0d30b8c4a3cd93e831b565b8d3f9bd"
+}

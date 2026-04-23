@@ -14,3 +14,4 @@ tokio-cron-scheduler = { workspace = true }
 db                   = { path = "../../crates/db" }
 ingest               = { path = "../../crates/ingest" }
 analytics            = { path = "../../crates/analytics" }
+clickhouse           = { workspace = true }

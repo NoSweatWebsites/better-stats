@@ -6,7 +6,93 @@ use oauth2::{reqwest::async_http_client, TokenResponse};
 use sqlx::PgPool;
 use uuid::Uuid;
 
+use clickhouse::Row;
+use serde::Serialize;
+
 use crate::token;
+
+#[derive(Row, Serialize)]
+struct SeoKeyword {
+    org_id: String,
+    site_id: uuid::Uuid,
+    date: time::Date,
+    keyword: String,
+    clicks: u32,
+    impressions: u32,
+    position: f32,
+    ctr: f32,
+}
+
+/// Pulls yesterday's GSC data for one site and writes rows to ClickHouse.
+pub async fn sync(
+    ch: &clickhouse::Client,
+    org_id: &str,
+    site_id: uuid::Uuid,
+    site_url: &str,
+    access_token: &str,
+) -> anyhow::Result<usize> {
+    let yesterday = (time::OffsetDateTime::now_utc() - time::Duration::days(1)).date();
+    let date_str = format!(
+        "{}-{:02}-{:02}",
+        yesterday.year(),
+        yesterday.month() as u8,
+        yesterday.day()
+    );
+
+    let body = serde_json::json!({
+        "startDate": date_str,
+        "endDate": date_str,
+        "dimensions": ["query"],
+        "rowLimit": 25000
+    });
+
+    let encoded_url = urlencoding::encode(site_url);
+    let resp: serde_json::Value = reqwest::Client::new()
+        .post(format!(
+            "https://searchconsole.googleapis.com/webmasters/v3/sites/{}/searchAnalytics/query",
+            encoded_url
+        ))
+        .bearer_auth(access_token)
+        .json(&body)
+        .send()
+        .await?
+        .error_for_status()?
+        .json()
+        .await?;
+
+    let rows = match resp["rows"].as_array() {
+        Some(r) => r,
+        None => return Ok(0),
+    };
+
+    let mut insert = ch.insert("seo_keywords")?;
+    let mut count = 0usize;
+
+    for row in rows {
+        let keyword = row["keys"][0].as_str().unwrap_or("").to_string();
+        let clicks = row["clicks"].as_f64().unwrap_or(0.0) as u32;
+        let impressions = row["impressions"].as_f64().unwrap_or(0.0) as u32;
+        let position = row["position"].as_f64().unwrap_or(0.0) as f32;
+        let ctr = row["ctr"].as_f64().unwrap_or(0.0) as f32;
+
+        insert
+            .write(&SeoKeyword {
+                org_id: org_id.to_string(),
+                site_id,
+                date: yesterday,
+                keyword,
+                clicks,
+                impressions,
+                position,
+                ctr,
+            })
+            .await?;
+        count += 1;
+    }
+
+    insert.end().await?;
+    Ok(count)
+}
 
 const AUTH_URL: &str = "https://accounts.google.com/o/oauth2/v2/auth";
 const TOKEN_URL: &str = "https://oauth2.googleapis.com/token";
