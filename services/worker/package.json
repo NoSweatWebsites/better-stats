@@ -1,0 +1,9 @@
+{
+  "name": "@betterstats/worker",
+  "scripts": {
+    "build": "cargo build --release -p worker",
+    "dev": "cargo watch -x 'run -p worker'",
+    "test": "cargo test -p worker",
+    "lint": "cargo clippy -p worker -- -D warnings"
+  }
+}

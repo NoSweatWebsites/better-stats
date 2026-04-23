@@ -1,0 +1,11 @@
+{
+  "name": "@betterstats/web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "echo 'web: scaffold pending Phase 1'",
+    "dev": "echo 'web: scaffold pending Phase 1'",
+    "lint": "echo 'web: scaffold pending Phase 1'",
+    "type-check": "echo 'web: scaffold pending Phase 1'"
+  }
+}

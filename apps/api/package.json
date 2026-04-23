@@ -1,0 +1,9 @@
+{
+  "name": "@betterstats/api",
+  "scripts": {
+    "build": "cargo build --release -p api 2>&1",
+    "dev": "cargo watch -x 'run -p api'",
+    "test": "cargo test -p api",
+    "lint": "cargo clippy -p api -- -D warnings"
+  }
+}

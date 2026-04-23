@@ -1,0 +1,22 @@
+{
+  "name": "@betterstats/sdk",
+  "version": "0.1.0",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": { "import": "./dist/index.mjs", "require": "./dist/index.js" },
+    "./react": { "import": "./dist/react.mjs", "require": "./dist/react.js" },
+    "./node": { "import": "./dist/node.mjs", "require": "./dist/node.js" }
+  },
+  "scripts": {
+    "build": "echo 'sdk: scaffold pending Phase 3'",
+    "dev": "echo 'sdk: scaffold pending Phase 3'",
+    "lint": "echo 'sdk: scaffold pending Phase 3'",
+    "type-check": "echo 'sdk: scaffold pending Phase 3'"
+  },
+  "devDependencies": {
+    "tsup": "^8.0.0",
+    "typescript": "^5.0.0"
+  }
+}
