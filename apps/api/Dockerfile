@@ -3,7 +3,10 @@ WORKDIR /app
 COPY Cargo.toml Cargo.lock ./
 COPY crates/ ./crates/
 COPY apps/api/ ./apps/api/
-COPY services/worker/ ./services/worker/
+# Stub worker so Cargo workspace resolves without needing its source
+RUN mkdir -p services/worker/src \
+    && printf '[package]\nname = "worker"\nversion = "0.1.0"\nedition = "2021"\n\n[dependencies]\ntokio = { workspace = true }\n' > services/worker/Cargo.toml \
+    && echo 'fn main() {}' > services/worker/src/main.rs
 RUN cargo build --release -p api
 
 FROM gcr.io/distroless/cc-debian12
