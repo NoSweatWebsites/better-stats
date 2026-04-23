@@ -1,0 +1,65 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id, org_id, name, domain, api_key, ga4_property_id, gsc_site_url, snippet_installed\n         FROM sites WHERE id = $1 AND org_id = $2",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "org_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "domain",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "api_key",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "ga4_property_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "gsc_site_url",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "snippet_installed",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      false
+    ]
+  },
+  "hash": "f7387530a324dd5bcc6bf14d2261ea88bb789de13f4ed097ee1f20e356c000cc"
+}

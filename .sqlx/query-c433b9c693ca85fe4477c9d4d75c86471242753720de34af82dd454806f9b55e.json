@@ -1,0 +1,20 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT DISTINCT o.clerk_org_id\n         FROM organisations o\n         JOIN integrations i ON i.org_id = o.clerk_org_id\n         WHERE i.refresh_token IS NOT NULL",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "clerk_org_id",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "c433b9c693ca85fe4477c9d4d75c86471242753720de34af82dd454806f9b55e"
+}

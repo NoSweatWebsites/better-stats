@@ -14,6 +14,16 @@ pub enum AppError {
     Internal(#[from] anyhow::Error),
 }
 
+impl From<StatusCode> for AppError {
+    fn from(status: StatusCode) -> Self {
+        match status {
+            StatusCode::FORBIDDEN => AppError::Forbidden,
+            StatusCode::NOT_FOUND => AppError::NotFound,
+            _ => AppError::Internal(anyhow::anyhow!("unexpected status: {status}")),
+        }
+    }
+}
+
 impl IntoResponse for AppError {
     fn into_response(self) -> axum::response::Response {
         let (status, message) = match &self {

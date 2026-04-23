@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO integrations (org_id, site_id, provider, access_token)\n         VALUES ($1, $2, 'gsc', $3)\n         ON CONFLICT (site_id, provider) DO UPDATE SET access_token = $3",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Uuid",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "aa1be9caed98a8c49b55cdf5cf128b3c1ce41952d073a06c21b1b1bd2cf00406"
+}

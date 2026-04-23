@@ -1,0 +1,66 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO sites (org_id, name, domain)\n         VALUES ($1, $2, $3)\n         RETURNING id, org_id, name, domain, api_key, ga4_property_id, gsc_site_url, snippet_installed",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "org_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "domain",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "api_key",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "ga4_property_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "gsc_site_url",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "snippet_installed",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      false
+    ]
+  },
+  "hash": "9c27039d8c30154615ecb485f2f91b4bdbc2f378bba7fce14e55ea951f0f8394"
+}

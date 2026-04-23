@@ -1,0 +1,34 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id, org_id, site_id FROM integrations\n         WHERE provider = 'ga4' AND access_token = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "org_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "site_id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "ca8c902a35d02ea6772951f47faadc81086bddd9cf2b481ae0db2b00779bc1a5"
+}

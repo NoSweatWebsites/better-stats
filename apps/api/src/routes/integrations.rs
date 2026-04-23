@@ -2,7 +2,7 @@ use axum::{
     extract::{Extension, Path, Query, State},
     response::Redirect,
     routing::get,
-    Json, Router,
+    Router,
 };
 use db::auth::AuthContext;
 use serde::Deserialize;

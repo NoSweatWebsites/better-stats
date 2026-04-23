@@ -59,11 +59,11 @@ async fn sync_all_orgs(db: &sqlx::PgPool) -> anyhow::Result<()> {
         });
     }
 
-    while let Some(_) = set.join_next().await {}
+    while set.join_next().await.is_some() {}
     Ok(())
 }
 
-async fn sync_org(db: &sqlx::PgPool, org_id: &str) -> anyhow::Result<()> {
+async fn sync_org(_db: &sqlx::PgPool, org_id: &str) -> anyhow::Result<()> {
     tracing::info!(org_id, "syncing org");
     // Phase 1 implementation: refresh tokens, pull GA4 + GSC data, write to ClickHouse
     Ok(())

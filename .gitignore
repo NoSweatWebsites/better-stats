@@ -18,6 +18,3 @@ dist/
 # IDE
 .vscode/
 .idea/
-
-# sqlx offline data
-.sqlx/
