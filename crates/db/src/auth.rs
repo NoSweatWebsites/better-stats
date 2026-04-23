@@ -12,8 +12,14 @@ pub struct ClerkClaims {
 
 #[derive(Debug, Clone)]
 pub enum AuthContext {
-    SuperAdmin { user_id: String },
-    OrgUser { user_id: String, org_id: String, role: OrgRole },
+    SuperAdmin {
+        user_id: String,
+    },
+    OrgUser {
+        user_id: String,
+        org_id: String,
+        role: OrgRole,
+    },
 }
 
 #[derive(Debug, Clone)]
@@ -59,14 +65,20 @@ pub async fn clerk_auth_middleware(
         .unwrap_or(false);
 
     let ctx = if is_super_admin {
-        AuthContext::SuperAdmin { user_id: claims.sub }
+        AuthContext::SuperAdmin {
+            user_id: claims.sub,
+        }
     } else {
         let org_id = claims.org_id.ok_or(StatusCode::FORBIDDEN)?;
         let role = match claims.org_role.as_deref() {
             Some("org:admin") => OrgRole::Admin,
             _ => OrgRole::Viewer,
         };
-        AuthContext::OrgUser { user_id: claims.sub, org_id, role }
+        AuthContext::OrgUser {
+            user_id: claims.sub,
+            org_id,
+            role,
+        }
     };
 
     req.extensions_mut().insert(ctx);
