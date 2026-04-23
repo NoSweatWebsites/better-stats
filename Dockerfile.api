@@ -2,6 +2,7 @@ FROM rust:latest AS builder
 WORKDIR /app
 COPY Cargo.toml Cargo.lock ./
 COPY .sqlx/ ./.sqlx/
+COPY migrations/ ./migrations/
 COPY crates/ ./crates/
 COPY apps/api/ ./apps/api/
 # Stub worker so Cargo workspace resolves without needing its source
