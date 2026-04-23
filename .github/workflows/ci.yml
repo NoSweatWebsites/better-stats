@@ -33,14 +33,3 @@ jobs:
       - run: pnpm install
       - run: pnpm turbo run build lint type-check
 
-  deploy:
-    needs: [rust, nextjs]
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-    steps:
-      - uses: actions/checkout@v4
-      - uses: railwayapp/railway-action@v1
-        with:
-          service: api
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
