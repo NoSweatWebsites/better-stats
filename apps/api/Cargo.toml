@@ -18,3 +18,4 @@ dotenvy            = { workspace = true }
 clickhouse         = { workspace = true }
 db                 = { path = "../../crates/db" }
 ingest             = { path = "../../crates/ingest" }
+svix               = { workspace = true }

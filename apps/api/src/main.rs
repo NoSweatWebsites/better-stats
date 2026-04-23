@@ -67,10 +67,19 @@ async fn main() {
 
     let state = AppState { db, ch };
 
-    let app = Router::new()
-        .route("/health", get(|| async { "ok" }))
+    // Protected routes — Clerk JWT required
+    let protected = Router::new()
         .nest("/api", routes::router())
-        .layer(middleware::from_fn(clerk_auth_middleware))
+        .layer(middleware::from_fn(clerk_auth_middleware));
+
+    // Public routes — no auth
+    let public = Router::new()
+        .route("/health", get(|| async { "ok" }))
+        .nest("/webhooks", routes::webhooks::router());
+
+    let app = Router::new()
+        .merge(protected)
+        .merge(public)
         .with_state(state);
 
     let port: u16 = std::env::var("API_PORT")

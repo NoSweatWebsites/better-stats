@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git -C /Users/nickeast/Desktop/no-sweat/betterstats add apps/api/src/main.rs)",
+      "Bash(git -C /Users/nickeast/Desktop/no-sweat/betterstats commit -m ' *)",
+      "Bash(git -C /Users/nickeast/Desktop/no-sweat/betterstats add apps/web/next.config.mjs Dockerfile.web)",
+      "Bash(git -C /Users/nickeast/Desktop/no-sweat/betterstats add apps/web/src/app/dashboard/page.tsx)",
+      "Bash(git -C /Users/nickeast/Desktop/no-sweat/betterstats add -A)"
+    ]
+  }
+}

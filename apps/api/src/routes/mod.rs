@@ -2,6 +2,7 @@ mod admin;
 mod dashboard;
 mod integrations;
 mod sites;
+pub mod webhooks;
 
 use crate::state::AppState;
 use axum::Router;

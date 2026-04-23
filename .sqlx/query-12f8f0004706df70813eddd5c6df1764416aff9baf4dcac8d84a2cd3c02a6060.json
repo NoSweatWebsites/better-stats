@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO organisations (clerk_org_id, name, slug)\n                     VALUES ($1, $2, $3)\n                     ON CONFLICT (clerk_org_id) DO UPDATE SET name = $2, slug = $3",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "12f8f0004706df70813eddd5c6df1764416aff9baf4dcac8d84a2cd3c02a6060"
+}

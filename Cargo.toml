@@ -28,3 +28,4 @@ base64             = "0.22"
 clickhouse         = { version = "0.11", features = ["lz4"] }
 tokio-cron-scheduler = { version = "0.10", features = ["signal"] }
 time               = { version = "0.3", features = ["serde"] }
+svix               = "1"
