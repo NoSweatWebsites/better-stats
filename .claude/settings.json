@@ -5,7 +5,9 @@
       "Bash(git -C /Users/nickeast/Desktop/no-sweat/betterstats commit -m ' *)",
       "Bash(git -C /Users/nickeast/Desktop/no-sweat/betterstats add apps/web/next.config.mjs Dockerfile.web)",
       "Bash(git -C /Users/nickeast/Desktop/no-sweat/betterstats add apps/web/src/app/dashboard/page.tsx)",
-      "Bash(git -C /Users/nickeast/Desktop/no-sweat/betterstats add -A)"
+      "Bash(git -C /Users/nickeast/Desktop/no-sweat/betterstats add -A)",
+      "Bash(SQLX_OFFLINE=true cargo check --workspace)",
+      "Bash(git commit -m ' *)"
     ]
   }
 }
