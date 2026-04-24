@@ -9,33 +9,38 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8080'
 export default function DashboardPage() {
   const { orgId, getToken, isLoaded } = useAuth()
   const router = useRouter()
-  const [noSites, setNoSites] = useState(false)
+  const [state, setState] = useState<'loading' | 'no-sites' | 'ready'>('loading')
   const retryTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const retryCount = useRef(0)
 
   useEffect(() => {
     if (!isLoaded || !orgId) return
 
+    setState('loading')
+    retryCount.current = 0
+
     async function tryFetch() {
       const token = await getToken()
-      if (!token) return
+      if (!token) { setState('no-sites'); return }
 
-      // If the JWT doesn't have org_id yet, Clerk's cache is stale —
-      // retry up to 5 times with backoff instead of a hard reload.
+      // Clerk's cached JWT may not yet include org_id after org selection —
+      // retry with backoff until the token is refreshed (up to ~3 seconds).
       try {
         const payload = JSON.parse(atob(token.split('.')[1]))
         if (!payload.org_id) {
-          if (retryCount.current < 5) {
-            retryTimer.current = setTimeout(tryFetch, 400 * (retryCount.current + 1))
+          if (retryCount.current < 6) {
+            retryTimer.current = setTimeout(tryFetch, 500)
             retryCount.current++
+          } else {
+            // Token genuinely won't refresh — send to create site form
+            setState('no-sites')
           }
           return
         }
       } catch {
+        setState('no-sites')
         return
       }
-
-      retryCount.current = 0
 
       try {
         const res = await fetch(`${API_URL}/api/orgs/${orgId}/sites`, {
@@ -45,14 +50,13 @@ export default function DashboardPage() {
         if (Array.isArray(sites) && sites.length > 0) {
           router.push(`/dashboard/${sites[0].id}/traffic`)
         } else {
-          setNoSites(true)
+          setState('no-sites')
         }
       } catch {
-        setNoSites(true)
+        setState('no-sites')
       }
     }
 
-    retryCount.current = 0
     tryFetch()
 
     return () => {
@@ -80,7 +84,13 @@ export default function DashboardPage() {
     )
   }
 
-  if (!noSites) return null
+  if (state === 'loading') {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="w-5 h-5 border-2 border-gray-300 border-t-black rounded-full animate-spin" />
+      </div>
+    )
+  }
 
   return <CreateSiteForm orgId={orgId} />
 }
