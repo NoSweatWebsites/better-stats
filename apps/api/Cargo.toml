@@ -19,3 +19,4 @@ clickhouse         = { workspace = true }
 db                 = { path = "../../crates/db" }
 ingest             = { path = "../../crates/ingest" }
 svix               = { workspace = true }
+tower-http         = { workspace = true }

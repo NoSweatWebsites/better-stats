@@ -32,11 +32,12 @@ async fn init_clickhouse(ch: &clickhouse::Client) {
     }
 }
 
-use axum::{middleware, routing::get, Router};
+use axum::{http::HeaderValue, middleware, routing::get, Router};
 use db::auth::clerk_auth_middleware;
 use sqlx::postgres::PgPoolOptions;
 use state::AppState;
 use std::net::SocketAddr;
+use tower_http::cors::{AllowHeaders, AllowMethods, CorsLayer};
 
 #[tokio::main]
 async fn main() {
@@ -67,6 +68,13 @@ async fn main() {
 
     let state = AppState { db, ch };
 
+    let web_url = std::env::var("WEB_URL").unwrap_or_else(|_| "http://localhost:3000".into());
+    let cors = CorsLayer::new()
+        .allow_origin(web_url.parse::<HeaderValue>().expect("invalid WEB_URL"))
+        .allow_methods(AllowMethods::any())
+        .allow_headers(AllowHeaders::any())
+        .allow_credentials(false);
+
     // Protected routes — Clerk JWT required
     let protected = Router::new()
         .nest("/api", routes::router())
@@ -80,6 +88,7 @@ async fn main() {
     let app = Router::new()
         .merge(protected)
         .merge(public)
+        .layer(cors)
         .with_state(state);
 
     let port: u16 = std::env::var("API_PORT")
