@@ -68,6 +68,16 @@ async fn create_site(
         return Err(AppError::Forbidden);
     }
 
+    // Lazily create the org row if the Clerk webhook hasn't fired yet
+    sqlx::query(
+        "INSERT INTO organisations (clerk_org_id, name, slug)
+         VALUES ($1, $1, $1)
+         ON CONFLICT (clerk_org_id) DO NOTHING",
+    )
+    .bind(&org_id)
+    .execute(&state.db)
+    .await?;
+
     let site = sqlx::query_as!(
         Site,
         "INSERT INTO sites (org_id, name, domain)

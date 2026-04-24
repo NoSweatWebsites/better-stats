@@ -94,21 +94,33 @@ function CreateSiteForm({ orgId }: { orgId: string }) {
   const { getToken } = useAuth()
   const router = useRouter()
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setLoading(true)
-    const form = e.currentTarget
-    const name = (form.elements.namedItem('name') as HTMLInputElement).value
-    const domain = (form.elements.namedItem('domain') as HTMLInputElement).value
-    const token = await getToken()
-    const res = await fetch(`${API_URL}/api/orgs/${orgId}/sites`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ name, domain }),
-    })
-    const site = await res.json()
-    router.push(`/dashboard/${site.id}/traffic`)
+    setError(null)
+    try {
+      const form = e.currentTarget
+      const name = (form.elements.namedItem('name') as HTMLInputElement).value
+      const domain = (form.elements.namedItem('domain') as HTMLInputElement).value
+      const token = await getToken()
+      const res = await fetch(`${API_URL}/api/orgs/${orgId}/sites`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ name, domain }),
+      })
+      if (!res.ok) {
+        setError('Failed to create site. Please try again.')
+        return
+      }
+      const site = await res.json()
+      router.push(`/dashboard/${site.id}/traffic`)
+    } catch {
+      setError('Something went wrong. Please try again.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -127,6 +139,7 @@ function CreateSiteForm({ orgId }: { orgId: string }) {
         >
           {loading ? 'Creating...' : 'Create site'}
         </button>
+        {error && <p className="text-sm text-red-500">{error}</p>}
       </form>
     </div>
   )
