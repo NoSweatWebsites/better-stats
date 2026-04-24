@@ -16,6 +16,20 @@ export default function DashboardPage() {
 
     getToken().then(async (token) => {
       if (!token) return
+
+      // Verify the JWT actually contains org_id — if not, Clerk's token
+      // cache hasn't refreshed yet after org selection; force a hard reload.
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]))
+        if (!payload.org_id) {
+          window.location.reload()
+          return
+        }
+      } catch {
+        window.location.reload()
+        return
+      }
+
       try {
         const res = await fetch(`${API_URL}/api/orgs/${orgId}/sites`, {
           headers: { Authorization: `Bearer ${token}` },
