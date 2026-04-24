@@ -20,32 +20,27 @@ export default function DashboardPage() {
     retryCount.current = 0
 
     async function tryFetch() {
-      const token = await getToken()
-      if (!token) { setState('no-sites'); return }
-
-      // Clerk's cached JWT may not yet include org_id after org selection —
-      // retry with backoff until the token is refreshed (up to ~3 seconds).
       try {
-        const payload = JSON.parse(atob(token.split('.')[1]))
-        if (!payload.org_id) {
+        const token = await getToken()
+        if (!token) { setState('no-sites'); return }
+
+        const res = await fetch(`${API_URL}/api/orgs/${orgId}/sites`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+
+        // 403 means the JWT doesn't yet carry the org claim — retry with backoff
+        if (res.status === 403) {
           if (retryCount.current < 6) {
             retryTimer.current = setTimeout(tryFetch, 500)
             retryCount.current++
           } else {
-            // Token genuinely won't refresh — send to create site form
             setState('no-sites')
           }
           return
         }
-      } catch {
-        setState('no-sites')
-        return
-      }
 
-      try {
-        const res = await fetch(`${API_URL}/api/orgs/${orgId}/sites`, {
-          headers: { Authorization: `Bearer ${token}` },
-        })
+        if (!res.ok) { setState('no-sites'); return }
+
         const sites = await res.json()
         if (Array.isArray(sites) && sites.length > 0) {
           router.push(`/dashboard/${sites[0].id}/traffic`)

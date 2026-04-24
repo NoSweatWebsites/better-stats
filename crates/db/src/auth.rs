@@ -8,11 +8,21 @@ use serde::Deserialize;
 use std::sync::OnceLock;
 use tokio::sync::RwLock;
 
+// Clerk v5 compact organisation object inside the JWT
+#[derive(Debug, Deserialize, Clone)]
+pub struct ClerkOrgClaims {
+    pub id: String,
+    pub rol: Option<String>,
+}
+
 #[derive(Debug, Deserialize, Clone)]
 pub struct ClerkClaims {
     pub sub: String,
+    // Clerk v4 top-level fields (kept for compatibility)
     pub org_id: Option<String>,
     pub org_role: Option<String>,
+    // Clerk v5 compact format
+    pub o: Option<ClerkOrgClaims>,
     #[serde(rename = "publicMetadata")]
     pub public_metadata: Option<serde_json::Value>,
 }
@@ -143,8 +153,15 @@ pub async fn clerk_auth_middleware(
             user_id: claims.sub,
         }
     } else {
-        let org_id = claims.org_id.ok_or(StatusCode::FORBIDDEN)?;
-        let role = match claims.org_role.as_deref() {
+        // Clerk v5 uses `o.id` / `o.rol`; v4 uses top-level `org_id` / `org_role`
+        let org_id = claims
+            .org_id
+            .or_else(|| claims.o.as_ref().map(|o| o.id.clone()))
+            .ok_or(StatusCode::FORBIDDEN)?;
+        let org_role_str = claims
+            .org_role
+            .or_else(|| claims.o.and_then(|o| o.rol));
+        let role = match org_role_str.as_deref() {
             Some("org:admin") => OrgRole::Admin,
             _ => OrgRole::Viewer,
         };
