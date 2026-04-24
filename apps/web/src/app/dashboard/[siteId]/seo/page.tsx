@@ -1,41 +1,92 @@
-import { redirect } from 'next/navigation'
-import { revalidatePath } from 'next/cache'
-import { auth } from '@clerk/nextjs/server'
+'use client'
+
+import { useAuth } from '@clerk/nextjs'
+import { useParams } from 'next/navigation'
+import { useEffect, useState } from 'react'
 import { makeApi } from '@/lib/api'
 
-interface Props {
-  params: { siteId: string }
-  searchParams: { days?: string }
+interface Site {
+  id: string
+  org_id: string
+  name: string
+  domain: string
+  gsc_site_url: string | null
 }
 
-export default async function SeoPage({ params, searchParams }: Props) {
-  const { siteId } = params
-  const { getToken, orgId } = await auth()
-  if (!orgId) return <p>No organisation selected.</p>
+interface Integrations {
+  ga4: { connected: boolean }
+  gsc: { connected: boolean }
+}
 
-  const token = await getToken()
-  if (!token) redirect('/sign-in')
+export default function SeoPage() {
+  const { orgId, getToken } = useAuth()
+  const params = useParams()
+  const siteId = params.siteId as string
 
-  const api = makeApi(token)
-  const [site, integrations] = await Promise.all([
-    api.sites.get(orgId, siteId).catch(() => null),
-    api.integrations.get(orgId, siteId).catch(() => ({ ga4: { connected: false }, gsc: { connected: false } })),
-  ])
+  const [site, setSite] = useState<Site | null>(null)
+  const [integrations, setIntegrations] = useState<Integrations | null>(null)
+  const [rows, setRows] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [siteUrl, setSiteUrl] = useState('')
 
-  if (!site) return <p>Site not found.</p>
+  useEffect(() => {
+    if (!orgId) return
+    let cancelled = false
 
-  const gscConnected: boolean = integrations?.gsc?.connected ?? false
-  const hasSiteUrl: boolean = !!site.gsc_site_url
+    async function load() {
+      const token = await getToken()
+      if (!token || cancelled) return
+      const api = makeApi(token)
+      try {
+        const [s, i] = await Promise.all([
+          api.sites.get(orgId!, siteId),
+          api.integrations.get(orgId!, siteId).catch(() => ({ ga4: { connected: false }, gsc: { connected: false } })),
+        ])
+        if (cancelled) return
+        setSite(s)
+        setIntegrations(i)
+        if (s.gsc_site_url && i.gsc?.connected) {
+          const data = await api.dashboard.seo(orgId!, 30).catch(() => [])
+          if (!cancelled) setRows(data)
+        }
+      } catch {
+        // site not found or error
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
 
-  async function saveSiteUrl(formData: FormData) {
-    'use server'
-    const { getToken: gt, orgId: oid } = await auth()
-    const tok = await gt()
-    if (!tok || !oid) return
-    const siteUrl = (formData.get('gsc_site_url') as string).trim()
-    await makeApi(tok).sites.update(oid, siteId, { gsc_site_url: siteUrl })
-    revalidatePath(`/dashboard/${siteId}/seo`)
+    load()
+    return () => { cancelled = true }
+  }, [orgId, siteId, getToken])
+
+  async function saveSiteUrl(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    setSaving(true)
+    try {
+      const token = await getToken()
+      if (!token || !orgId) return
+      const url = siteUrl.trim()
+      await makeApi(token).sites.update(orgId, siteId, { gsc_site_url: url })
+      setSite(s => s ? { ...s, gsc_site_url: url } : s)
+    } finally {
+      setSaving(false)
+    }
   }
+
+  if (!orgId || loading) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="w-5 h-5 border-2 border-gray-300 border-t-black rounded-full animate-spin" />
+      </div>
+    )
+  }
+
+  if (!site) return <p className="text-gray-500">Site not found.</p>
+
+  const gscConnected = integrations?.gsc?.connected ?? false
+  const hasSiteUrl = !!site.gsc_site_url
 
   if (!gscConnected) {
     return (
@@ -68,27 +119,26 @@ export default async function SeoPage({ params, searchParams }: Props) {
             <span className="font-mono">https://example.com/</span> or{' '}
             <span className="font-mono">sc-domain:example.com</span>.
           </p>
-          <form action={saveSiteUrl} className="flex gap-2 mt-4">
+          <form onSubmit={saveSiteUrl} className="flex gap-2 mt-4">
             <input
-              name="gsc_site_url"
+              value={siteUrl}
+              onChange={e => setSiteUrl(e.target.value)}
               placeholder="https://example.com/"
               required
               className="border rounded px-3 py-2 text-sm flex-1"
             />
             <button
               type="submit"
-              className="bg-black text-white rounded px-4 py-2 text-sm font-medium hover:bg-gray-800"
+              disabled={saving}
+              className="bg-black text-white rounded px-4 py-2 text-sm font-medium hover:bg-gray-800 disabled:opacity-50"
             >
-              Save
+              {saving ? 'Saving…' : 'Save'}
             </button>
           </form>
         </div>
       </div>
     )
   }
-
-  const days = Number(searchParams.days ?? 30)
-  const rows = await api.dashboard.seo(orgId, days).catch(() => [])
 
   return (
     <div>

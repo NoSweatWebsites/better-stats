@@ -1,41 +1,92 @@
-import { redirect } from 'next/navigation'
-import { revalidatePath } from 'next/cache'
-import { auth } from '@clerk/nextjs/server'
+'use client'
+
+import { useAuth } from '@clerk/nextjs'
+import { useParams } from 'next/navigation'
+import { useEffect, useState } from 'react'
 import { makeApi } from '@/lib/api'
 
-interface Props {
-  params: { siteId: string }
-  searchParams: { days?: string }
+interface Site {
+  id: string
+  org_id: string
+  name: string
+  domain: string
+  ga4_property_id: string | null
 }
 
-export default async function TrafficPage({ params, searchParams }: Props) {
-  const { siteId } = params
-  const { getToken, orgId } = await auth()
-  if (!orgId) return <p>No organisation selected.</p>
+interface Integrations {
+  ga4: { connected: boolean }
+  gsc: { connected: boolean }
+}
 
-  const token = await getToken()
-  if (!token) redirect('/sign-in')
+export default function TrafficPage() {
+  const { orgId, getToken } = useAuth()
+  const params = useParams()
+  const siteId = params.siteId as string
 
-  const api = makeApi(token)
-  const [site, integrations] = await Promise.all([
-    api.sites.get(orgId, siteId).catch(() => null),
-    api.integrations.get(orgId, siteId).catch(() => ({ ga4: { connected: false }, gsc: { connected: false } })),
-  ])
+  const [site, setSite] = useState<Site | null>(null)
+  const [integrations, setIntegrations] = useState<Integrations | null>(null)
+  const [rows, setRows] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [propertyId, setPropertyId] = useState('')
 
-  if (!site) return <p>Site not found.</p>
+  useEffect(() => {
+    if (!orgId) return
+    let cancelled = false
 
-  const ga4Connected: boolean = integrations?.ga4?.connected ?? false
-  const hasPropertyId: boolean = !!site.ga4_property_id
+    async function load() {
+      const token = await getToken()
+      if (!token || cancelled) return
+      const api = makeApi(token)
+      try {
+        const [s, i] = await Promise.all([
+          api.sites.get(orgId!, siteId),
+          api.integrations.get(orgId!, siteId).catch(() => ({ ga4: { connected: false }, gsc: { connected: false } })),
+        ])
+        if (cancelled) return
+        setSite(s)
+        setIntegrations(i)
+        if (s.ga4_property_id && i.ga4?.connected) {
+          const data = await api.dashboard.traffic(orgId!, 30).catch(() => [])
+          if (!cancelled) setRows(data)
+        }
+      } catch {
+        // site not found or error
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
 
-  async function savePropertyId(formData: FormData) {
-    'use server'
-    const { getToken: gt, orgId: oid } = await auth()
-    const tok = await gt()
-    if (!tok || !oid) return
-    const propertyId = (formData.get('ga4_property_id') as string).trim()
-    await makeApi(tok).sites.update(oid, siteId, { ga4_property_id: propertyId })
-    revalidatePath(`/dashboard/${siteId}/traffic`)
+    load()
+    return () => { cancelled = true }
+  }, [orgId, siteId, getToken])
+
+  async function savePropertyId(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    setSaving(true)
+    try {
+      const token = await getToken()
+      if (!token || !orgId) return
+      const id = propertyId.trim()
+      await makeApi(token).sites.update(orgId, siteId, { ga4_property_id: id })
+      setSite(s => s ? { ...s, ga4_property_id: id } : s)
+    } finally {
+      setSaving(false)
+    }
   }
+
+  if (!orgId || loading) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="w-5 h-5 border-2 border-gray-300 border-t-black rounded-full animate-spin" />
+      </div>
+    )
+  }
+
+  if (!site) return <p className="text-gray-500">Site not found.</p>
+
+  const ga4Connected = integrations?.ga4?.connected ?? false
+  const hasPropertyId = !!site.ga4_property_id
 
   if (!ga4Connected) {
     return (
@@ -67,18 +118,20 @@ export default async function TrafficPage({ params, searchParams }: Props) {
             Find this in GA4 → Admin → Property Settings. Enter numbers only, e.g.{' '}
             <span className="font-mono">123456789</span>.
           </p>
-          <form action={savePropertyId} className="flex gap-2 mt-4">
+          <form onSubmit={savePropertyId} className="flex gap-2 mt-4">
             <input
-              name="ga4_property_id"
+              value={propertyId}
+              onChange={e => setPropertyId(e.target.value)}
               placeholder="123456789"
               required
               className="border rounded px-3 py-2 text-sm flex-1"
             />
             <button
               type="submit"
-              className="bg-black text-white rounded px-4 py-2 text-sm font-medium hover:bg-gray-800"
+              disabled={saving}
+              className="bg-black text-white rounded px-4 py-2 text-sm font-medium hover:bg-gray-800 disabled:opacity-50"
             >
-              Save
+              {saving ? 'Saving…' : 'Save'}
             </button>
           </form>
         </div>
@@ -86,22 +139,10 @@ export default async function TrafficPage({ params, searchParams }: Props) {
     )
   }
 
-  const days = Number(searchParams.days ?? 30)
-  const rows = await api.dashboard.traffic(orgId, days).catch(() => [])
-
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-semibold">Traffic</h1>
-        <select
-          defaultValue={days}
-          className="border rounded px-3 py-1.5 text-sm"
-          disabled
-        >
-          <option value={7}>Last 7 days</option>
-          <option value={30}>Last 30 days</option>
-          <option value={90}>Last 90 days</option>
-        </select>
       </div>
       <table className="w-full text-sm border-collapse">
         <thead>
