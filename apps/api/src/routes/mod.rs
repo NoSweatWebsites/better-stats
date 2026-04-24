@@ -13,6 +13,9 @@ pub fn router() -> Router<AppState> {
         .nest("/orgs/:org_id/integrations", integrations::router())
         .nest("/orgs/:org_id/dashboard", dashboard::router())
         .nest("/admin", admin::router())
-        // Fixed-path OAuth callbacks (Google requires static redirect URIs)
-        .merge(integrations::callbacks())
+}
+
+// OAuth callbacks must be public — Google redirects the browser here with no Bearer token
+pub fn callbacks() -> Router<AppState> {
+    integrations::callbacks()
 }

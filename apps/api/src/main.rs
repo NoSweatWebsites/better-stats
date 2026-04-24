@@ -83,7 +83,9 @@ async fn main() {
     // Public routes — no auth
     let public = Router::new()
         .route("/health", get(|| async { "ok" }))
-        .nest("/webhooks", routes::webhooks::router());
+        .nest("/webhooks", routes::webhooks::router())
+        // OAuth callbacks: Google redirects the browser here — no Authorization header
+        .nest("/api", routes::callbacks());
 
     let app = Router::new()
         .merge(protected)
