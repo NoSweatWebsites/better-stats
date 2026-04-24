@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 import { auth } from '@clerk/nextjs/server'
-import { OrganizationList } from '@clerk/nextjs'
 import { makeApi } from '@/lib/api'
+import { OrgPicker } from './_OrgPicker'
 
 export default async function DashboardPage() {
   const { getToken, orgId } = await auth()
@@ -15,11 +15,7 @@ export default async function DashboardPage() {
             Create or switch to an organisation to continue.
           </p>
         </div>
-        <OrganizationList
-          hidePersonal
-          afterSelectOrganizationUrl="/dashboard"
-          afterCreateOrganizationUrl="/dashboard"
-        />
+        <OrgPicker />
       </div>
     )
   }
