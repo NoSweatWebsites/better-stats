@@ -2,7 +2,7 @@
 
 import { useAuth, OrganizationList } from '@clerk/nextjs'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8080'
 
@@ -10,25 +10,32 @@ export default function DashboardPage() {
   const { orgId, getToken, isLoaded } = useAuth()
   const router = useRouter()
   const [noSites, setNoSites] = useState(false)
+  const retryTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const retryCount = useRef(0)
 
   useEffect(() => {
     if (!isLoaded || !orgId) return
 
-    getToken().then(async (token) => {
+    async function tryFetch() {
+      const token = await getToken()
       if (!token) return
 
-      // Verify the JWT actually contains org_id — if not, Clerk's token
-      // cache hasn't refreshed yet after org selection; force a hard reload.
+      // If the JWT doesn't have org_id yet, Clerk's cache is stale —
+      // retry up to 5 times with backoff instead of a hard reload.
       try {
         const payload = JSON.parse(atob(token.split('.')[1]))
         if (!payload.org_id) {
-          window.location.reload()
+          if (retryCount.current < 5) {
+            retryTimer.current = setTimeout(tryFetch, 400 * (retryCount.current + 1))
+            retryCount.current++
+          }
           return
         }
       } catch {
-        window.location.reload()
         return
       }
+
+      retryCount.current = 0
 
       try {
         const res = await fetch(`${API_URL}/api/orgs/${orgId}/sites`, {
@@ -43,7 +50,14 @@ export default function DashboardPage() {
       } catch {
         setNoSites(true)
       }
-    })
+    }
+
+    retryCount.current = 0
+    tryFetch()
+
+    return () => {
+      if (retryTimer.current) clearTimeout(retryTimer.current)
+    }
   }, [orgId, isLoaded, getToken, router])
 
   if (!isLoaded) return null
