@@ -118,6 +118,9 @@ pub async fn begin_oauth(db: &PgPool, org_id: &str, site_id: Uuid) -> anyhow::Re
     let (auth_url, csrf_token) = client
         .authorize_url(CsrfToken::new_random)
         .add_scope(Scope::new(SCOPE.into()))
+        // offline access + prompt=consent ensures Google always returns a refresh token
+        .add_extra_param("access_type", "offline")
+        .add_extra_param("prompt", "consent")
         .url();
 
     sqlx::query!(
