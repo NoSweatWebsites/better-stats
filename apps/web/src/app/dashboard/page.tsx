@@ -1,16 +1,36 @@
 import { redirect } from 'next/navigation'
 import { auth } from '@clerk/nextjs/server'
+import { OrganizationList } from '@clerk/nextjs'
 import { makeApi } from '@/lib/api'
 
 export default async function DashboardPage() {
   const { getToken, orgId } = await auth()
-  if (!orgId) return <p className="p-8 text-gray-500">No organisation selected. Use the switcher in the sidebar.</p>
+
+  if (!orgId) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full gap-6">
+        <div className="text-center">
+          <h1 className="text-2xl font-semibold mb-2">Select an organisation</h1>
+          <p className="text-gray-500 text-sm mb-6">
+            Create or switch to an organisation to continue.
+          </p>
+        </div>
+        <OrganizationList
+          hidePersonal
+          afterSelectOrganizationUrl="/dashboard"
+          afterCreateOrganizationUrl="/dashboard"
+        />
+      </div>
+    )
+  }
 
   const token = await getToken()
   if (!token) redirect('/sign-in')
 
   const api = makeApi(token)
-  const sites: { id: string; name: string; domain: string }[] = await api.sites.list(orgId).catch(() => [])
+  const sites: { id: string; name: string; domain: string }[] = await api.sites
+    .list(orgId)
+    .catch(() => [])
 
   if (sites.length > 0) {
     redirect(`/dashboard/${sites[0].id}/traffic`)
