@@ -1,9 +1,9 @@
 use oauth2::{
-    basic::BasicClient, AuthUrl, AuthorizationCode, ClientId, ClientSecret, CsrfToken,
-    PkceCodeChallenge, RedirectUrl, Scope, TokenUrl,
+    basic::BasicClient, AuthUrl, AuthorizationCode, ClientId, ClientSecret, CsrfToken, RedirectUrl,
+    Scope, TokenUrl,
 };
 use oauth2::{reqwest::async_http_client, TokenResponse};
-use sqlx::PgPool;
+use sqlx::{PgPool, Row as _};
 use uuid::Uuid;
 
 use clickhouse::Row;
@@ -114,12 +114,10 @@ fn make_client() -> anyhow::Result<BasicClient> {
 
 pub async fn begin_oauth(db: &PgPool, org_id: &str, site_id: Uuid) -> anyhow::Result<String> {
     let client = make_client()?;
-    let (pkce_challenge, _pkce_verifier) = PkceCodeChallenge::new_random_sha256();
 
     let (auth_url, csrf_token) = client
         .authorize_url(CsrfToken::new_random)
         .add_scope(Scope::new(SCOPE.into()))
-        .set_pkce_challenge(pkce_challenge)
         .url();
 
     sqlx::query!(
@@ -136,13 +134,16 @@ pub async fn begin_oauth(db: &PgPool, org_id: &str, site_id: Uuid) -> anyhow::Re
     Ok(auth_url.to_string())
 }
 
-pub async fn handle_callback(db: &PgPool, code: &str, state: &str) -> anyhow::Result<()> {
-    let integration = sqlx::query!(
-        "SELECT id FROM integrations WHERE provider = 'gsc' AND access_token = $1",
-        state
+pub async fn handle_callback(db: &PgPool, code: &str, state: &str) -> anyhow::Result<Uuid> {
+    let row = sqlx::query(
+        "SELECT id, site_id FROM integrations WHERE provider = 'gsc' AND access_token = $1",
     )
+    .bind(state)
     .fetch_one(db)
     .await?;
+
+    let integration_id: Uuid = row.try_get("id")?;
+    let site_id: Option<Uuid> = row.try_get("site_id")?;
 
     let client = make_client()?;
     let token = client
@@ -168,10 +169,10 @@ pub async fn handle_callback(db: &PgPool, code: &str, state: &str) -> anyhow::Re
         access_token,
         refresh_token,
         expires_at,
-        integration.id
+        integration_id
     )
     .execute(db)
     .await?;
 
-    Ok(())
+    site_id.ok_or_else(|| anyhow::anyhow!("integration missing site_id"))
 }

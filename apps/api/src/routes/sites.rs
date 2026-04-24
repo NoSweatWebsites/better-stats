@@ -8,6 +8,8 @@ use db::{
     auth::AuthContext,
     models::{CreateSiteRequest, Site, UpdateSiteRequest},
 };
+use serde::Serialize;
+use sqlx::Row as _;
 use uuid::Uuid;
 
 use crate::{error::AppError, state::AppState};
@@ -19,6 +21,18 @@ pub fn router() -> Router<AppState> {
             "/:site_id",
             get(get_site).put(update_site).delete(delete_site),
         )
+        .route("/:site_id/integrations", get(get_integrations))
+}
+
+#[derive(Serialize)]
+struct IntegrationStatus {
+    connected: bool,
+}
+
+#[derive(Serialize)]
+struct IntegrationsResponse {
+    ga4: IntegrationStatus,
+    gsc: IntegrationStatus,
 }
 
 async fn list_sites(
@@ -148,4 +162,36 @@ async fn delete_site(
     }
 
     Ok(StatusCode::NO_CONTENT)
+}
+
+async fn get_integrations(
+    State(state): State<AppState>,
+    Extension(ctx): Extension<AuthContext>,
+    Path((org_id, site_id)): Path<(String, Uuid)>,
+) -> Result<Json<IntegrationsResponse>, AppError> {
+    let authed_org = ctx.require_org_id()?;
+    if !ctx.is_super_admin() && authed_org != org_id {
+        return Err(AppError::Forbidden);
+    }
+
+    let rows = sqlx::query(
+        "SELECT provider FROM integrations
+         WHERE org_id = $1 AND site_id = $2 AND refresh_token IS NOT NULL",
+    )
+    .bind(&org_id)
+    .bind(site_id)
+    .fetch_all(&state.db)
+    .await?;
+
+    let ga4 = rows
+        .iter()
+        .any(|r| r.try_get::<String, _>("provider").ok().as_deref() == Some("ga4"));
+    let gsc = rows
+        .iter()
+        .any(|r| r.try_get::<String, _>("provider").ok().as_deref() == Some("gsc"));
+
+    Ok(Json(IntegrationsResponse {
+        ga4: IntegrationStatus { connected: ga4 },
+        gsc: IntegrationStatus { connected: gsc },
+    }))
 }

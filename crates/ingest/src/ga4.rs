@@ -1,6 +1,6 @@
 use oauth2::{
-    basic::BasicClient, AuthUrl, AuthorizationCode, ClientId, ClientSecret, CsrfToken,
-    PkceCodeChallenge, RedirectUrl, Scope, TokenUrl,
+    basic::BasicClient, AuthUrl, AuthorizationCode, ClientId, ClientSecret, CsrfToken, RedirectUrl,
+    Scope, TokenUrl,
 };
 use oauth2::{reqwest::async_http_client, TokenResponse};
 use sqlx::PgPool;
@@ -164,12 +164,10 @@ fn make_client() -> anyhow::Result<BasicClient> {
 
 pub async fn begin_oauth(db: &PgPool, org_id: &str, site_id: Uuid) -> anyhow::Result<String> {
     let client = make_client()?;
-    let (pkce_challenge, _pkce_verifier) = PkceCodeChallenge::new_random_sha256();
 
     let (auth_url, csrf_token) = client
         .authorize_url(CsrfToken::new_random)
         .add_scope(Scope::new(SCOPE.into()))
-        .set_pkce_challenge(pkce_challenge)
         .url();
 
     // Store CSRF token temporarily so callback can look up org/site
@@ -187,7 +185,7 @@ pub async fn begin_oauth(db: &PgPool, org_id: &str, site_id: Uuid) -> anyhow::Re
     Ok(auth_url.to_string())
 }
 
-pub async fn handle_callback(db: &PgPool, code: &str, state: &str) -> anyhow::Result<()> {
+pub async fn handle_callback(db: &PgPool, code: &str, state: &str) -> anyhow::Result<Uuid> {
     let integration = sqlx::query!(
         "SELECT id, org_id, site_id FROM integrations
          WHERE provider = 'ga4' AND access_token = $1",
@@ -225,5 +223,7 @@ pub async fn handle_callback(db: &PgPool, code: &str, state: &str) -> anyhow::Re
     .execute(db)
     .await?;
 
-    Ok(())
+    integration
+        .site_id
+        .ok_or_else(|| anyhow::anyhow!("integration missing site_id"))
 }

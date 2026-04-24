@@ -17,8 +17,26 @@ export function makeApi(token: string) {
   return {
     sites: {
       list: (orgId: string) => apiFetch(`/api/orgs/${orgId}/sites`, token),
+      get: (orgId: string, siteId: string) =>
+        apiFetch(`/api/orgs/${orgId}/sites/${siteId}`, token),
       create: (orgId: string, body: { name: string; domain: string }) =>
-        apiFetch(`/api/orgs/${orgId}/sites`, token, { method: 'POST', body: JSON.stringify(body) }),
+        apiFetch(`/api/orgs/${orgId}/sites`, token, {
+          method: 'POST',
+          body: JSON.stringify(body),
+        }),
+      update: (
+        orgId: string,
+        siteId: string,
+        body: { name?: string; ga4_property_id?: string; gsc_site_url?: string },
+      ) =>
+        apiFetch(`/api/orgs/${orgId}/sites/${siteId}`, token, {
+          method: 'PUT',
+          body: JSON.stringify(body),
+        }),
+    },
+    integrations: {
+      get: (orgId: string, siteId: string) =>
+        apiFetch(`/api/orgs/${orgId}/sites/${siteId}/integrations`, token),
     },
     dashboard: {
       traffic: (orgId: string, days = 30) =>
