@@ -28,6 +28,7 @@ export default function TrafficPage() {
   const [rows, setRows] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [scanning, setScanning] = useState(false)
   const [propertyId, setPropertyId] = useState('')
 
   useEffect(() => {
@@ -60,6 +61,20 @@ export default function TrafficPage() {
     load()
     return () => { cancelled = true }
   }, [orgId, siteId, getToken])
+
+  async function scanNow() {
+    setScanning(true)
+    try {
+      const token = await getToken()
+      if (!token || !orgId) return
+      await makeApi(token).sync(orgId, siteId)
+      // Reload data after sync
+      const data = await makeApi(token).dashboard.traffic(orgId, 30).catch(() => [])
+      setRows(data)
+    } finally {
+      setScanning(false)
+    }
+  }
 
   async function savePropertyId(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -143,6 +158,15 @@ export default function TrafficPage() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-semibold">Traffic</h1>
+        {rows.length === 0 && (
+          <button
+            onClick={scanNow}
+            disabled={scanning}
+            className="bg-black text-white rounded px-4 py-2 text-sm font-medium hover:bg-gray-800 disabled:opacity-50"
+          >
+            {scanning ? 'Scanning…' : 'Scan now'}
+          </button>
+        )}
       </div>
       <table className="w-full text-sm border-collapse">
         <thead>
@@ -167,7 +191,7 @@ export default function TrafficPage() {
           {rows.length === 0 && (
             <tr>
               <td colSpan={5} className="py-8 text-center text-gray-400">
-                No data yet — the nightly sync runs at 02:00 UTC.
+                {scanning ? 'Fetching your data…' : 'No data yet — click "Scan now" or wait for the nightly sync at 02:00 UTC.'}
               </td>
             </tr>
           )}

@@ -22,6 +22,7 @@ pub fn router() -> Router<AppState> {
             get(get_site).put(update_site).delete(delete_site),
         )
         .route("/:site_id/integrations", get(get_integrations))
+        .route("/:site_id/sync", axum::routing::post(sync_site))
 }
 
 #[derive(Serialize)]
@@ -204,4 +205,70 @@ async fn get_integrations(
         ga4: IntegrationStatus { connected: ga4 },
         gsc: IntegrationStatus { connected: gsc },
     }))
+}
+
+async fn sync_site(
+    State(state): State<AppState>,
+    Extension(ctx): Extension<AuthContext>,
+    Path((org_id, site_id)): Path<(String, Uuid)>,
+) -> Result<StatusCode, AppError> {
+    let authed_org = ctx.require_org_id()?;
+    if !ctx.is_super_admin() && authed_org != org_id {
+        return Err(AppError::Forbidden);
+    }
+
+    let rows = sqlx::query(
+        "SELECT i.id, i.provider, i.access_token, i.refresh_token, i.expires_at,
+                s.ga4_property_id, s.gsc_site_url
+         FROM integrations i
+         JOIN sites s ON s.id = i.site_id
+         WHERE i.org_id = $1 AND i.site_id = $2 AND i.refresh_token IS NOT NULL",
+    )
+    .bind(&org_id)
+    .bind(site_id)
+    .fetch_all(&state.db)
+    .await?;
+
+    for row in rows {
+        use sqlx::Row as _;
+        let id: Uuid = row.try_get("id").unwrap();
+        let provider: String = row.try_get("provider").unwrap_or_default();
+        let access_token: Option<String> = row.try_get("access_token").ok().flatten();
+        let refresh_token: Option<String> = row.try_get("refresh_token").ok().flatten();
+        let expires_at: Option<time::OffsetDateTime> = row.try_get("expires_at").ok().flatten();
+
+        let token = match ingest::token::ensure_fresh_token(
+            &state.db, id, access_token.as_deref(), refresh_token.as_deref(), expires_at,
+        )
+        .await
+        {
+            Ok(t) => t,
+            Err(e) => {
+                tracing::error!(site_id = %site_id, "token refresh failed: {e}");
+                continue;
+            }
+        };
+
+        match provider.as_str() {
+            "ga4" => {
+                let prop_id: Option<String> = row.try_get("ga4_property_id").ok().flatten();
+                if let Some(ref p) = prop_id {
+                    if let Err(e) = ingest::ga4::sync(&state.ch, &org_id, site_id, p, &token).await {
+                        tracing::error!(site_id = %site_id, "ga4 sync error: {e}");
+                    }
+                }
+            }
+            "gsc" => {
+                let site_url: Option<String> = row.try_get("gsc_site_url").ok().flatten();
+                if let Some(ref u) = site_url {
+                    if let Err(e) = ingest::gsc::sync(&state.ch, &org_id, site_id, u, &token).await {
+                        tracing::error!(site_id = %site_id, "gsc sync error: {e}");
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+
+    Ok(StatusCode::NO_CONTENT)
 }

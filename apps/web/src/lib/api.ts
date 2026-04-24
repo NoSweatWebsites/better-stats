@@ -38,6 +38,8 @@ export function makeApi(token: string) {
       get: (orgId: string, siteId: string) =>
         apiFetch(`/api/orgs/${orgId}/sites/${siteId}/integrations`, token),
     },
+    sync: (orgId: string, siteId: string) =>
+      apiFetch(`/api/orgs/${orgId}/sites/${siteId}/sync`, token, { method: 'POST' }),
     dashboard: {
       traffic: (orgId: string, days = 30) =>
         apiFetch(`/api/orgs/${orgId}/dashboard/traffic?days=${days}`, token),
