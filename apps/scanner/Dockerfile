@@ -8,7 +8,7 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY packages/db/package.json packages/db/
 COPY apps/scanner/package.json apps/scanner/
 RUN mkdir -p apps/web && echo '{"name":"@betterstats/web","version":"0.0.1","private":true}' > apps/web/package.json
-RUN pnpm install --frozen-lockfile --prod
+RUN pnpm install --no-frozen-lockfile --prod
 
 # ── Build ─────────────────────────────────────────────────────────────────
 FROM base AS builder
@@ -17,7 +17,7 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY packages/db/package.json packages/db/
 COPY apps/scanner/package.json apps/scanner/
 RUN mkdir -p apps/web && echo '{"name":"@betterstats/web","version":"0.0.1","private":true}' > apps/web/package.json
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --no-frozen-lockfile
 COPY packages/ packages/
 COPY apps/scanner/ apps/scanner/
 RUN pnpm --filter @betterstats/scanner build
