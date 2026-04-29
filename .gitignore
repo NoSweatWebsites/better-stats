@@ -1,20 +1,8 @@
-# Rust
-target/
-
-# Node
-node_modules/
-.next/
-dist/
-.turbo/
-
-# Env
+node_modules
+.next
+dist
 .env
 .env.local
-.env.*.local
-
-# macOS
 .DS_Store
-
-# IDE
-.vscode/
-.idea/
+*.tsbuildinfo
+.turbo

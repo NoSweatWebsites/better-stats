@@ -3,22 +3,15 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": [".next/**", "dist/**", "target/release/**"]
-    },
-    "build:api": {
-      "cache": true,
-      "outputs": ["target/release/api"]
-    },
-    "build:worker": {
-      "cache": true,
-      "outputs": ["target/release/worker"]
+      "outputs": [".next/**", "!.next/cache/**", "dist/**"]
     },
     "dev": {
       "cache": false,
       "persistent": true
     },
-    "lint": { "outputs": [] },
-    "test": { "dependsOn": ["^build"], "outputs": [] },
-    "type-check": { "dependsOn": ["^build"], "outputs": [] }
+    "lint": {},
+    "type-check": {
+      "dependsOn": ["^build"]
+    }
   }
 }

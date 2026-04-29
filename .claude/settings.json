@@ -1,15 +1,30 @@
 {
   "permissions": {
     "allow": [
-      "Bash(git -C /Users/nickeast/Desktop/no-sweat/betterstats add apps/api/src/main.rs)",
-      "Bash(git -C /Users/nickeast/Desktop/no-sweat/betterstats commit -m ' *)",
-      "Bash(git -C /Users/nickeast/Desktop/no-sweat/betterstats add apps/web/next.config.mjs Dockerfile.web)",
-      "Bash(git -C /Users/nickeast/Desktop/no-sweat/betterstats add apps/web/src/app/dashboard/page.tsx)",
-      "Bash(git -C /Users/nickeast/Desktop/no-sweat/betterstats add -A)",
-      "Bash(SQLX_OFFLINE=true cargo check --workspace)",
-      "Bash(git commit -m ' *)",
-      "Bash(SQLX_OFFLINE=true cargo check --all)",
-      "Bash(pnpm --filter web exec tsc --noEmit)"
+      "mcp__railway__list-projects",
+      "mcp__railway__whoami",
+      "mcp__railway__list-services",
+      "mcp__railway__railway-agent",
+      "Bash(pnpm install *)",
+      "Bash(DATABASE_URL=\"postgresql://postgres:hqucCGyuKDVZOkSsyEwXLTZxAWjnkzHR@switchback.proxy.rlwy.net:22855/railway\" pnpm db:push)",
+      "Bash(pnpm dev *)",
+      "Bash(curl -s http://localhost:3000 -o /dev/null -w \"%{http_code}\")",
+      "Bash(curl -s http://localhost:3001/health)",
+      "Bash(curl -s http://localhost:3000/login -o /dev/null -w \"%{http_code}\")",
+      "Bash(curl -s -X POST http://localhost:3001/run-batch -H \"x-scanner-secret: c9c8950350639896ee86c4efa5f995c8f7cf331f068c78d8861f1422957213aa\" -H \"Content-Type: application/json\" -d '{\"batchId\":\"test\",\"orgId\":\"test\"}')",
+      "Bash(pkill -f \"tsx watch src/index.ts\")",
+      "Bash(pkill -f \"next dev\")",
+      "Bash(curl -s -X POST http://localhost:3001/run-batch -H 'x-scanner-secret: c9c8950350639896ee86c4efa5f995c8f7cf331f068c78d8861f1422957213aa' -H 'Content-Type: application/json' -d '{\"batchId\":\"00000000-0000-0000-0000-000000000000\",\"orgId\":\"test\"}')",
+      "Bash(pkill -f \"tsx\")",
+      "Bash(curl -s http://localhost:3000/dashboard -o /dev/null -w \"%{http_code}\")",
+      "Bash(pkill -f \"tsx watch\")",
+      "Bash(xargs ls *)",
+      "Bash(node -e ' *)",
+      "Bash(node --env-file .env -e ' *)",
+      "Bash(pnpm add *)"
+    ],
+    "additionalDirectories": [
+      "/tmp"
     ]
   }
 }

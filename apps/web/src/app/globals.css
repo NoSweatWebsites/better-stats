@@ -1,3 +1,77 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+:root {
+  /* Brand palette */
+  --bs-lime: #A7EF48;
+  --bs-purple: #A654FD;
+  --bs-sand: #E6E0C4;
+  --bs-red: #FD3C16;
+  --bs-deep: #14342B;
+  --bs-ink: #0B201F;
+
+  /* Neutrals (tinted toward the brand) */
+  --background: color-mix(in srgb, #ffffff 92%, var(--bs-sand));
+  --surface: #ffffff;
+  --surface-2: color-mix(in srgb, #ffffff 86%, var(--bs-sand));
+  --border: color-mix(in srgb, var(--bs-ink) 10%, #ffffff);
+  --muted: color-mix(in srgb, var(--bs-ink) 62%, #ffffff);
+  --muted-2: color-mix(in srgb, var(--bs-ink) 38%, #ffffff);
+  --foreground: var(--bs-ink);
+
+  /* Semantic */
+  --primary: var(--bs-purple);
+  --positive: var(--bs-lime);
+  --danger: var(--bs-red);
+
+  /* Motion */
+  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-1: 120ms;
+  --dur-2: 200ms;
+  --dur-3: 320ms;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+@keyframes bs-fade-up {
+  from { opacity: 0; transform: translate3d(0, 10px, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+
+@keyframes bs-scale-in {
+  from { opacity: 0; transform: scale(0.98); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@layer utilities {
+  .bs-press {
+    transition: transform var(--dur-1) var(--ease-out-quart);
+  }
+  .bs-press:active {
+    transform: scale(0.985);
+  }
+
+  .bs-hover-lift {
+    transition:
+      transform var(--dur-2) var(--ease-out-quart),
+      background-color var(--dur-2) var(--ease-out-quart),
+      border-color var(--dur-2) var(--ease-out-quart),
+      box-shadow var(--dur-2) var(--ease-out-quart);
+  }
+  .bs-hover-lift:hover {
+    transform: translate3d(0, -1px, 0);
+  }
+
+  .bs-enter {
+    animation: bs-fade-up var(--dur-3) var(--ease-out-expo) both;
+  }
+  .bs-scale-in {
+    animation: bs-scale-in var(--dur-3) var(--ease-out-expo) both;
+  }
+}

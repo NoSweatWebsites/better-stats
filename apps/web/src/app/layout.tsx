@@ -3,8 +3,8 @@ import { ClerkProvider } from '@clerk/nextjs'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'betterstats',
-  description: 'Analytics that understand AI traffic',
+  title: 'BetterStats — AI Visibility Tracking',
+  description: 'Track how your brand appears in AI-generated responses across Claude, ChatGPT, Gemini, and Perplexity.',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
