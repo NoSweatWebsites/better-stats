@@ -7,8 +7,7 @@ WORKDIR /app
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.json ./
 COPY packages/db/package.json packages/db/
 COPY apps/web/package.json apps/web/
-# Stub other app manifests so pnpm workspace resolves correctly
-RUN mkdir -p apps/scanner && echo '{"name":"@betterstats/scanner","version":"0.0.1","private":true}' > apps/scanner/package.json
+COPY apps/scanner/package.json apps/scanner/
 RUN pnpm install --no-frozen-lockfile
 
 # ── Build ─────────────────────────────────────────────────────────────────
