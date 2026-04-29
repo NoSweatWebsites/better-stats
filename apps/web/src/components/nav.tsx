@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils'
 import { useState } from 'react'
 
 const aiVisibilityItems = [
-  { href: '/dashboard', label: 'AI Chats Visibility', icon: MessageSquareText },
+  { href: '/ai-visibility', label: 'AI Chats Visibility', icon: MessageSquareText },
   { href: '/google-aio', label: 'Google AI Overview', icon: Globe },
   { href: '/ai-traffic', label: 'AI Traffic (GA4)', icon: BarChart2 },
 ]
