@@ -4,7 +4,7 @@ RUN corepack enable && corepack prepare pnpm@9.15.4 --activate
 # ── Install dependencies ──────────────────────────────────────────────────
 FROM base AS deps
 WORKDIR /app
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY .npmrc package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY packages/db/package.json packages/db/
 COPY apps/scanner/package.json apps/scanner/
 RUN mkdir -p apps/web && echo '{"name":"@betterstats/web","version":"0.0.1","private":true}' > apps/web/package.json
@@ -13,7 +13,7 @@ RUN pnpm install --no-frozen-lockfile --prod
 # ── Build ─────────────────────────────────────────────────────────────────
 FROM base AS builder
 WORKDIR /app
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY .npmrc package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY packages/db/package.json packages/db/
 COPY apps/scanner/package.json apps/scanner/
 RUN mkdir -p apps/web && echo '{"name":"@betterstats/web","version":"0.0.1","private":true}' > apps/web/package.json

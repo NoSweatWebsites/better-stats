@@ -4,7 +4,7 @@ RUN corepack enable && corepack prepare pnpm@9.15.4 --activate
 # ── Install dependencies ──────────────────────────────────────────────────
 FROM base AS deps
 WORKDIR /app
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.json ./
+COPY .npmrc package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.json ./
 COPY packages/db/package.json packages/db/
 COPY apps/web/package.json apps/web/
 COPY apps/scanner/package.json apps/scanner/

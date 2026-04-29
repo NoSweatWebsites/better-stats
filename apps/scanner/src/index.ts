@@ -1,4 +1,5 @@
-import 'dotenv/config'
+import dotenv from 'dotenv'
+dotenv.config()
 import { serve } from '@hono/node-server'
 import { Hono } from 'hono'
 import { getDb, scans, scanBatches, prompts, brands, mentions, citations } from '@betterstats/db'
