@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { ChevronRight, BarChart2, Globe, MessageSquareText, ScanSearch, Settings2 } from 'lucide-react'
+import { ChevronRight, BarChart2, Globe, MessageSquareText, ScanSearch, Search, Settings2 } from 'lucide-react'
 import { OrganizationSwitcher, UserButton } from '@clerk/nextjs'
 import { cn } from '@/lib/utils'
 import { useState } from 'react'
@@ -19,6 +19,10 @@ const aiVisibilityItems = [
   { href: '/ai-visibility', label: 'AI Chats Visibility', icon: MessageSquareText },
   { href: '/google-aio', label: 'Google AI Overview', icon: Globe },
   { href: '/ai-traffic', label: 'AI Traffic (GA4)', icon: BarChart2 },
+]
+
+const growthItems = [
+  { href: '/keywords-research', label: 'Keywords Research', icon: Search },
 ]
 
 const settingsItems = [
@@ -108,6 +112,12 @@ export function Nav() {
           label="AI Visibility"
           icon={<AISparkleIcon size={15} />}
           items={aiVisibilityItems}
+          pathname={pathname}
+        />
+        <NavSection
+          label="Growth Agents"
+          icon={<Search size={15} />}
+          items={growthItems}
           pathname={pathname}
         />
         <NavSection

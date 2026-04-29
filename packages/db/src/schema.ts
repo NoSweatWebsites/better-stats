@@ -54,3 +54,12 @@ export const citations = pgTable('citations', {
   url: text('url'),
   isActual: boolean('is_actual').default(false), // true = Perplexity API citation, false = inferred
 })
+
+export const keywordResearchReports = pgTable('keyword_research_reports', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  organisationId: text('organisation_id').notNull().references(() => organisations.id),
+  title: text('title').notNull(),
+  brief: text('brief').notNull(),
+  markdown: text('markdown').notNull(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+})

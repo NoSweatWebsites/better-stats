@@ -75,3 +75,49 @@ body {
     animation: bs-scale-in var(--dur-3) var(--ease-out-expo) both;
   }
 }
+
+.keywords-print {
+  display: none;
+}
+
+@media print {
+  aside,
+  .keywords-screen {
+    display: none !important;
+  }
+
+  main {
+    overflow: visible !important;
+  }
+
+  .keywords-print {
+    display: block;
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 32px;
+    color: var(--foreground);
+    background: white;
+    font-size: 12px;
+    line-height: 1.55;
+  }
+
+  .keywords-print h1,
+  .keywords-print h2,
+  .keywords-print h3 {
+    color: var(--foreground);
+    page-break-after: avoid;
+  }
+
+  .keywords-print table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 10px;
+  }
+
+  .keywords-print th,
+  .keywords-print td {
+    border: 1px solid var(--border);
+    padding: 6px;
+    vertical-align: top;
+  }
+}
