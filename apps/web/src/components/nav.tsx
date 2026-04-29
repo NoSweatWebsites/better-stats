@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { ChevronRight, BarChart2, Globe, MessageSquareText, ScanSearch } from 'lucide-react'
+import { ChevronRight, BarChart2, Globe, MessageSquareText, ScanSearch, Settings2 } from 'lucide-react'
 import { OrganizationSwitcher, UserButton } from '@clerk/nextjs'
 import { cn } from '@/lib/utils'
 import { useState } from 'react'
@@ -22,18 +22,75 @@ const aiVisibilityItems = [
 ]
 
 const settingsItems = [
-  { href: '/settings/prompts', label: 'Prompts' },
-  { href: '/settings/brands', label: 'Brands' },
-  { href: '/settings/models', label: 'Models' },
+  { href: '/scans', label: 'Scans', icon: ScanSearch },
+  { href: '/settings/prompts', label: 'Prompts', icon: ChevronRight },
+  { href: '/settings/brands', label: 'Brands', icon: ChevronRight },
+  { href: '/settings/models', label: 'Models', icon: ChevronRight },
 ]
+
+function NavSection({
+  label,
+  icon,
+  items,
+  pathname,
+}: {
+  label: string
+  icon: React.ReactNode
+  items: { href: string; label: string; icon: React.ComponentType<{ size?: number; className?: string }> }[]
+  pathname: string
+}) {
+  const isActive = items.some((i) => pathname === i.href || pathname.startsWith(i.href + '/'))
+  const [open, setOpen] = useState(isActive)
+
+  return (
+    <div>
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className={cn(
+          'w-full flex items-center gap-2.5 px-2 py-2 rounded-lg text-sm font-medium transition-colors',
+          isActive
+            ? 'bg-[#0B201F] text-[#E6E0C4]'
+            : 'text-(--muted-2) hover:text-(--foreground) hover:bg-(--surface-2)'
+        )}
+      >
+        <span className="shrink-0 w-[15px] h-[15px] flex items-center justify-center">{icon}</span>
+        <span className="flex-1 text-left">{label}</span>
+        <ChevronRight
+          size={13}
+          className={cn(
+            'shrink-0 transition-transform',
+            isActive ? 'text-[#E6E0C4]/60' : 'text-(--muted-2)',
+            open && 'rotate-90'
+          )}
+        />
+      </button>
+
+      {open && (
+        <div className="pl-4 mt-0.5 space-y-0.5">
+          {items.map(({ href, label: itemLabel, icon: Icon }) => {
+            const active = pathname === href || pathname.startsWith(href + '/')
+            return (
+              <Link key={href} href={href}
+                className={cn(
+                  'flex items-center gap-2.5 px-2 py-2 rounded-lg text-sm transition-colors',
+                  active
+                    ? 'bg-(--surface-2) text-(--foreground) font-medium'
+                    : 'text-(--muted-2) hover:text-(--foreground) hover:bg-(--surface-2)'
+                )}
+              >
+                <Icon size={13} className="shrink-0 text-(--muted-2)" />
+                {itemLabel}
+              </Link>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
 
 export function Nav() {
   const pathname = usePathname()
-
-  const aiActive = [...aiVisibilityItems, ...settingsItems].some(
-    (item) => pathname === item.href || pathname.startsWith(item.href + '/')
-  )
-  const [aiOpen, setAiOpen] = useState(true)
 
   return (
     <aside className="w-56 shrink-0 flex flex-col h-screen border-r border-(--border) bg-(--surface) px-3 py-4">
@@ -46,78 +103,19 @@ export function Nav() {
         <OrganizationSwitcher hidePersonal appearance={{ elements: { rootBox: 'w-full' } }} />
       </div>
 
-      <nav className="flex-1 space-y-0.5 overflow-y-auto">
-
-        {/* AI Visibility section */}
-        <button
-          onClick={() => setAiOpen((v) => !v)}
-          className={cn(
-            'w-full flex items-center gap-2.5 px-2 py-2 rounded-lg text-sm transition-colors',
-            aiActive
-              ? 'text-(--foreground) font-medium'
-              : 'text-(--muted-2) hover:text-(--foreground) hover:bg-(--surface-2)'
-          )}
-        >
-          <AISparkleIcon size={15} />
-          <span className="flex-1 text-left">AI Visibility</span>
-          <ChevronRight
-            size={13}
-            className={cn('shrink-0 transition-transform text-(--muted-2)', aiOpen && 'rotate-90')}
-          />
-        </button>
-
-        {aiOpen && (
-          <div className="pl-4 space-y-0.5">
-            {aiVisibilityItems.map(({ href, label, icon: Icon }) => {
-              const active = pathname === href || pathname.startsWith(href + '/')
-              return (
-                <Link key={href} href={href}
-                  className={cn(
-                    'flex items-center gap-2.5 px-2 py-2 rounded-lg text-sm transition-colors',
-                    active
-                      ? 'bg-(--surface-2) text-(--foreground) font-medium'
-                      : 'text-(--muted-2) hover:text-(--foreground) hover:bg-(--surface-2)'
-                  )}
-                >
-                  <Icon size={14} className="shrink-0" />
-                  {label}
-                </Link>
-              )
-            })}
-
-            <div className="pt-3 pb-1 px-2">
-              <span className="text-[10px] font-medium text-(--muted-2) uppercase tracking-wider">Settings</span>
-            </div>
-
-            {settingsItems.map(({ href, label }) => (
-              <Link key={href} href={href}
-                className={cn(
-                  'flex items-center gap-2.5 px-2 py-2 rounded-lg text-sm transition-colors',
-                  pathname === href
-                    ? 'bg-(--surface-2) text-(--foreground) font-medium'
-                    : 'text-(--muted-2) hover:text-(--foreground) hover:bg-(--surface-2)'
-                )}
-              >
-                <ChevronRight size={13} className="text-[color-mix(in_srgb,var(--primary)_35%,white)] shrink-0" />
-                {label}
-              </Link>
-            ))}
-          </div>
-        )}
-
-        {/* Scans */}
-        <Link href="/scans"
-          className={cn(
-            'flex items-center gap-2.5 px-2 py-2 rounded-lg text-sm transition-colors',
-            pathname.startsWith('/scans')
-              ? 'bg-(--surface-2) text-(--foreground) font-medium'
-              : 'text-(--muted-2) hover:text-(--foreground) hover:bg-(--surface-2)'
-          )}
-        >
-          <ScanSearch size={15} className="shrink-0" />
-          Scans
-        </Link>
-
+      <nav className="flex-1 space-y-1 overflow-y-auto">
+        <NavSection
+          label="AI Visibility"
+          icon={<AISparkleIcon size={15} />}
+          items={aiVisibilityItems}
+          pathname={pathname}
+        />
+        <NavSection
+          label="Settings"
+          icon={<Settings2 size={15} />}
+          items={settingsItems}
+          pathname={pathname}
+        />
       </nav>
 
       <div className="px-2 pt-4 border-t border-(--border)">
