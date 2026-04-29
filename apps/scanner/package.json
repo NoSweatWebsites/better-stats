@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "tsup src/index.ts --format cjs --out-dir dist --no-splitting --external drizzle-orm --external postgres --external @anthropic-ai/sdk --external openai --external @google/generative-ai --external @hono/node-server --external hono --external dotenv",
+    "build": "tsup src/index.ts --format cjs --out-dir dist --no-splitting --external drizzle-orm --external postgres --external @anthropic-ai/sdk --external openai --external @google/generative-ai --external @hono/node-server --external hono",
     "start": "node dist/index.js",
     "type-check": "tsc --noEmit"
   },
