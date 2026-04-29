@@ -26,7 +26,7 @@ RUN pnpm --filter @betterstats/scanner build
 FROM node:20-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
-COPY --from=deps /app/node_modules ./node_modules
+COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/apps/scanner/dist/index.js ./index.js
 EXPOSE 3001
 ENV PORT=3001
